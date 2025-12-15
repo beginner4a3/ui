@@ -17,55 +17,81 @@ import os
 # From: https://huggingface.co/ai4bharat/indic-parler-tts
 # ==========================================
 
-# Speakers organized by language with recommended voices first
+# Official speakers organized by language with recommended voices first
 SPEAKERS_BY_LANGUAGE = {
-    "Hindi": {
-        "recommended": ["Divya", "Karan"],
-        "all": ["Divya", "Karan", "Sita", "Bikram", "Maya", "Rohit"]
-    },
-    "Tamil": {
-        "recommended": ["Jaya", "Thamizh"],
-        "all": ["Jaya", "Thamizh", "Aditi", "Sunita", "Tapan"]
-    },
-    "Telugu": {
-        "recommended": ["Anjali", "Amrita"],
-        "all": ["Anjali", "Amrita"]
+    "Assamese": {
+        "recommended": ["Amit", "Sita"],
+        "all": ["Amit", "Sita", "Poonam", "Rakesh"]
     },
     "Bengali": {
         "recommended": ["Arjun", "Aditi"],
         "all": ["Arjun", "Aditi", "Tapan", "Rashmi", "Arnav", "Riya"]
     },
-    "Kannada": {
-        "recommended": ["Kavya", "Priya"],
-        "all": ["Kavya", "Priya"]
+    "Bodo": {
+        "recommended": ["Bikram", "Maya"],
+        "all": ["Bikram", "Maya", "Kalpana"]
     },
-    "Malayalam": {
-        "recommended": ["Meera", "Lakshmi"],
-        "all": ["Meera", "Lakshmi"]
+    "Chhattisgarhi": {
+        "recommended": ["Bhanu", "Champa"],
+        "all": ["Bhanu", "Champa"]
     },
-    "Marathi": {
-        "recommended": ["Neha", "Pooja"],
-        "all": ["Neha", "Pooja"]
+    "Dogri": {
+        "recommended": ["Karan"],
+        "all": ["Karan"]
+    },
+    "English": {
+        "recommended": ["Thoma", "Mary"],
+        "all": ["Thoma", "Mary", "Swapna", "Dinesh", "Meera", "Jatin", "Aakash", "Sneha", 
+                "Kabir", "Tisha", "Chingkhei", "Thoiba", "Priya", "Tarun", "Gauri", 
+                "Nisha", "Raghav", "Kavya", "Ravi", "Vikas", "Riya"]
     },
     "Gujarati": {
-        "recommended": ["Aisha"],
-        "all": ["Aisha"]
+        "recommended": ["Yash", "Neha"],
+        "all": ["Yash", "Neha"]
+    },
+    "Hindi": {
+        "recommended": ["Rohit", "Divya"],
+        "all": ["Rohit", "Divya", "Aman", "Rani"]
+    },
+    "Kannada": {
+        "recommended": ["Suresh", "Anu"],
+        "all": ["Suresh", "Anu", "Chetan", "Vidya"]
+    },
+    "Malayalam": {
+        "recommended": ["Anjali", "Harish"],
+        "all": ["Anjali", "Anju", "Harish"]
+    },
+    "Manipuri": {
+        "recommended": ["Laishram", "Ranjit"],
+        "all": ["Laishram", "Ranjit"]
+    },
+    "Marathi": {
+        "recommended": ["Sanjay", "Sunita"],
+        "all": ["Sanjay", "Sunita", "Nikhil", "Radha", "Varun", "Isha"]
+    },
+    "Nepali": {
+        "recommended": ["Amrita"],
+        "all": ["Amrita"]
     },
     "Odia": {
-        "recommended": ["Leela"],
-        "all": ["Leela"]
+        "recommended": ["Manas", "Debjani"],
+        "all": ["Manas", "Debjani"]
     },
     "Punjabi": {
-        "recommended": ["Indira"],
-        "all": ["Indira"]
+        "recommended": ["Divjot", "Gurpreet"],
+        "all": ["Divjot", "Gurpreet"]
     },
-    "Assamese": {
-        "recommended": ["Kiran"],
-        "all": ["Kiran"]
+    "Sanskrit": {
+        "recommended": ["Aryan"],
+        "all": ["Aryan"]
     },
-    "English (Indian)": {
-        "recommended": ["Aarav", "Naina"],
-        "all": ["Aarav", "Naina"]
+    "Tamil": {
+        "recommended": ["Jaya"],
+        "all": ["Kavitha", "Jaya"]
+    },
+    "Telugu": {
+        "recommended": ["Prakash", "Lalitha"],
+        "all": ["Prakash", "Lalitha", "Kiran"]
     }
 }
 
@@ -74,16 +100,17 @@ def build_speaker_choices():
     choices = ["-- Random Voice --"]
     
     # First add all recommended speakers
-    choices.append("--- RECOMMENDED VOICES ---")
+    choices.append("─── ⭐ RECOMMENDED VOICES ───")
     for lang, data in SPEAKERS_BY_LANGUAGE.items():
         for speaker in data["recommended"]:
             choices.append(f"⭐ {speaker} ({lang})")
     
     # Then add all speakers by language
-    choices.append("--- ALL VOICES BY LANGUAGE ---")
+    choices.append("─── ALL VOICES BY LANGUAGE ───")
     for lang, data in SPEAKERS_BY_LANGUAGE.items():
         for speaker in data["all"]:
-            if f"⭐ {speaker} ({lang})" not in choices:  # Avoid duplicates
+            # Skip if already in recommended
+            if speaker not in data["recommended"]:
                 choices.append(f"{speaker} ({lang})")
     
     return choices
@@ -215,8 +242,11 @@ def generate_description(
     speed_desc = SPEED_OPTIONS[speed][1]
     expr_desc = EXPRESSIVITY_OPTIONS[expressivity][1]
     
+    # Check if it's a section header
+    is_header = speaker.startswith("───") or speaker == "-- Random Voice --"
+    
     # Build description
-    if speaker and speaker not in ["-- Random Voice --", "--- RECOMMENDED VOICES ---", "--- ALL VOICES BY LANGUAGE ---"]:
+    if not is_header:
         # Extract speaker name (remove ⭐ prefix and language suffix)
         speaker_name = speaker.replace("⭐ ", "").split(" (")[0]
         desc = f"{speaker_name}'s voice is {expr_desc} with a {pitch_desc} tone"
@@ -265,10 +295,6 @@ def generate_speech(
     if not text.strip():
         return None, "❌ Please enter some text to speak."
     
-    # Skip section headers
-    if speaker in ["--- RECOMMENDED VOICES ---", "--- ALL VOICES BY LANGUAGE ---"]:
-        speaker = "-- Random Voice --"
-    
     description = generate_description(
         speaker, gender, accent, emotion,
         pitch, speed, expressivity,
@@ -315,7 +341,7 @@ def preview_description(
     )
 
 # ==========================================
-# Gradio Interface (No Load Button)
+# Gradio Interface
 # ==========================================
 
 def create_interface():
@@ -339,14 +365,12 @@ def create_interface():
         gr.Markdown(
             """
             # 🎤 Indic Parler TTS - Audio Quality Control
-            **Generate high-quality speech with 69 speakers, 21 languages, and 12 emotions**
+            **69 Speakers • 18 Languages • Full Audio Controls**
             """,
             elem_classes="main-title"
         )
         
-        # Status bar (no load button)
         gr.Markdown(f"**Status:** {model_status}")
-        
         gr.Markdown("---")
         
         with gr.Row():
@@ -366,14 +390,14 @@ def create_interface():
                 speaker = gr.Dropdown(
                     choices=SPEAKER_CHOICES,
                     value="-- Random Voice --",
-                    label="Speaker"
+                    label="Speaker (69 voices across 18 languages)"
                 )
                 
                 with gr.Row():
                     gender = gr.Radio(
                         choices=["female", "male"],
                         value="female",
-                        label="Gender"
+                        label="Gender (for random voice)"
                     )
                     accent = gr.Dropdown(
                         choices=["None", "Indian", "British", "American"],
@@ -453,7 +477,6 @@ def create_interface():
                     - Use **⭐ recommended speakers** for best quality
                     - Add **punctuation** for natural pauses
                     - Use **"very clear"** noise for best quality
-                    - Higher **expressivity** = more dynamic speech
                     """
                 )
         
@@ -487,7 +510,7 @@ def create_interface():
             """
             ---
             **Model**: [ai4bharat/indic-parler-tts](https://huggingface.co/ai4bharat/indic-parler-tts) | 
-            **Languages**: 21 | **Speakers**: 69 | **Emotions**: 12
+            **Languages**: 18 | **Speakers**: 69 | **Emotions**: 12
             """
         )
     
@@ -513,8 +536,6 @@ if __name__ == "__main__":
         print("   from app import setup_model")
         print("   setup_model('hf_your_token')")
         print("")
-        print("   Then run this cell again.")
-        print("=" * 50)
     
     app = create_interface()
     app.launch(share=True, debug=True, show_error=True)
