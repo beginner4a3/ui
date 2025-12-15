@@ -13,25 +13,82 @@ import numpy as np
 import os
 
 # ==========================================
-# Configuration
+# Configuration - Official Speaker List
+# From: https://huggingface.co/ai4bharat/indic-parler-tts
 # ==========================================
 
-SPEAKERS = {
-    "-- Random Voice --": "",
-    "Hindi": ["Divya", "Rohit", "Maya", "Karan", "Sita", "Bikram"],
-    "Tamil": ["Aditi", "Sunita", "Tapan"],
-    "Telugu": ["Anjali", "Amrita"],
-    "Bengali": ["Leela"],
-    "Kannada": ["Kavya", "Priya"],
-    "Malayalam": ["Meera", "Lakshmi"],
-    "Marathi": ["Neha", "Pooja"],
+# Speakers organized by language with recommended voices first
+SPEAKERS_BY_LANGUAGE = {
+    "Hindi": {
+        "recommended": ["Divya", "Karan"],
+        "all": ["Divya", "Karan", "Sita", "Bikram", "Maya", "Rohit"]
+    },
+    "Tamil": {
+        "recommended": ["Jaya", "Thamizh"],
+        "all": ["Jaya", "Thamizh", "Aditi", "Sunita", "Tapan"]
+    },
+    "Telugu": {
+        "recommended": ["Anjali", "Amrita"],
+        "all": ["Anjali", "Amrita"]
+    },
+    "Bengali": {
+        "recommended": ["Arjun", "Aditi"],
+        "all": ["Arjun", "Aditi", "Tapan", "Rashmi", "Arnav", "Riya"]
+    },
+    "Kannada": {
+        "recommended": ["Kavya", "Priya"],
+        "all": ["Kavya", "Priya"]
+    },
+    "Malayalam": {
+        "recommended": ["Meera", "Lakshmi"],
+        "all": ["Meera", "Lakshmi"]
+    },
+    "Marathi": {
+        "recommended": ["Neha", "Pooja"],
+        "all": ["Neha", "Pooja"]
+    },
+    "Gujarati": {
+        "recommended": ["Aisha"],
+        "all": ["Aisha"]
+    },
+    "Odia": {
+        "recommended": ["Leela"],
+        "all": ["Leela"]
+    },
+    "Punjabi": {
+        "recommended": ["Indira"],
+        "all": ["Indira"]
+    },
+    "Assamese": {
+        "recommended": ["Kiran"],
+        "all": ["Kiran"]
+    },
+    "English (Indian)": {
+        "recommended": ["Aarav", "Naina"],
+        "all": ["Aarav", "Naina"]
+    }
 }
 
-# Flatten speakers for dropdown
-SPEAKER_CHOICES = ["-- Random Voice --"]
-for lang, speakers in SPEAKERS.items():
-    if isinstance(speakers, list):
-        SPEAKER_CHOICES.extend([f"{s} ({lang})" for s in speakers])
+# Build dropdown choices with recommended voices on top
+def build_speaker_choices():
+    choices = ["-- Random Voice --"]
+    
+    # First add all recommended speakers
+    choices.append("--- RECOMMENDED VOICES ---")
+    for lang, data in SPEAKERS_BY_LANGUAGE.items():
+        for speaker in data["recommended"]:
+            choices.append(f"⭐ {speaker} ({lang})")
+    
+    # Then add all speakers by language
+    choices.append("--- ALL VOICES BY LANGUAGE ---")
+    for lang, data in SPEAKERS_BY_LANGUAGE.items():
+        for speaker in data["all"]:
+            if f"⭐ {speaker} ({lang})" not in choices:  # Avoid duplicates
+                choices.append(f"{speaker} ({lang})")
+    
+    return choices
+
+SPEAKER_CHOICES = build_speaker_choices()
 
 EMOTIONS = [
     "None", "Neutral", "Happy", "Sad", "Anger", "Fear", 
@@ -100,7 +157,9 @@ def setup_model(hf_token: str):
     from transformers import AutoTokenizer
     
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    torch_dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+    
+    # Use float32 instead of bfloat16 to avoid unsupported ScalarType error
+    torch_dtype = torch.float32
     
     print(f"🔧 Loading model on {device}...")
     print("   (This may take a few minutes on first run)")
@@ -157,8 +216,9 @@ def generate_description(
     expr_desc = EXPRESSIVITY_OPTIONS[expressivity][1]
     
     # Build description
-    if speaker and speaker != "-- Random Voice --":
-        speaker_name = speaker.split(" (")[0]
+    if speaker and speaker not in ["-- Random Voice --", "--- RECOMMENDED VOICES ---", "--- ALL VOICES BY LANGUAGE ---"]:
+        # Extract speaker name (remove ⭐ prefix and language suffix)
+        speaker_name = speaker.replace("⭐ ", "").split(" (")[0]
         desc = f"{speaker_name}'s voice is {expr_desc} with a {pitch_desc} tone"
     else:
         if accent and accent != "None":
@@ -204,6 +264,10 @@ def generate_speech(
     
     if not text.strip():
         return None, "❌ Please enter some text to speak."
+    
+    # Skip section headers
+    if speaker in ["--- RECOMMENDED VOICES ---", "--- ALL VOICES BY LANGUAGE ---"]:
+        speaker = "-- Random Voice --"
     
     description = generate_description(
         speaker, gender, accent, emotion,
@@ -297,6 +361,7 @@ def create_interface():
                 )
                 
                 gr.Markdown("### 👤 Voice Settings")
+                gr.Markdown("*⭐ = Recommended voice for best quality*")
                 
                 speaker = gr.Dropdown(
                     choices=SPEAKER_CHOICES,
@@ -385,7 +450,7 @@ def create_interface():
                 gr.Markdown(
                     """
                     ### 💡 Tips
-                    - Use **named speakers** for consistent voice
+                    - Use **⭐ recommended speakers** for best quality
                     - Add **punctuation** for natural pauses
                     - Use **"very clear"** noise for best quality
                     - Higher **expressivity** = more dynamic speech
