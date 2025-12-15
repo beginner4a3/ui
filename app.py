@@ -2,12 +2,15 @@
 Indic Parler TTS - Interactive Audio Quality Control
 Gradio-based frontend for Google Colab
 
-Run with: python app.py
+Usage:
+1. First run setup cell to load model
+2. Then run: python app.py (or import and call launch_app())
 """
 
 import torch
 import gradio as gr
 import numpy as np
+import os
 
 # ==========================================
 # Configuration
@@ -58,7 +61,7 @@ EXPRESSIVITY_OPTIONS = {
 }
 
 # ==========================================
-# Model Loading
+# Global Model Variables
 # ==========================================
 
 model = None
@@ -66,9 +69,32 @@ tokenizer = None
 description_tokenizer = None
 device = None
 
-def load_model():
-    """Load the Indic Parler TTS model with GPU optimization."""
+# ==========================================
+# Model Loading (Called from Colab cell)
+# ==========================================
+
+def setup_model(hf_token: str):
+    """
+    Load the model. Call this BEFORE launching the app.
+    
+    Usage in Colab:
+        from app import setup_model
+        setup_model("hf_your_token_here")
+    """
     global model, tokenizer, description_tokenizer, device
+    
+    print("=" * 50)
+    print("🔐 Setting up Indic Parler TTS")
+    print("=" * 50)
+    
+    # Login to HuggingFace
+    from huggingface_hub import login
+    try:
+        login(token=hf_token.strip())
+        print("✅ Logged into HuggingFace")
+    except Exception as e:
+        print(f"❌ HF Login failed: {e}")
+        return False
     
     from parler_tts import ParlerTTSForConditionalGeneration
     from transformers import AutoTokenizer
@@ -77,20 +103,36 @@ def load_model():
     torch_dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
     
     print(f"🔧 Loading model on {device}...")
+    print("   (This may take a few minutes on first run)")
     
-    model = ParlerTTSForConditionalGeneration.from_pretrained(
-        "ai4bharat/indic-parler-tts",
-        torch_dtype=torch_dtype,
-        attn_implementation="sdpa"
-    ).to(device)
-    
-    tokenizer = AutoTokenizer.from_pretrained("ai4bharat/indic-parler-tts")
-    description_tokenizer = AutoTokenizer.from_pretrained(
-        model.config.text_encoder._name_or_path
-    )
-    
-    print("✅ Model loaded successfully!")
-    return f"✅ Model loaded on {device}"
+    try:
+        model = ParlerTTSForConditionalGeneration.from_pretrained(
+            "ai4bharat/indic-parler-tts",
+            torch_dtype=torch_dtype,
+            attn_implementation="sdpa",
+            token=hf_token.strip()
+        ).to(device)
+        
+        tokenizer = AutoTokenizer.from_pretrained(
+            "ai4bharat/indic-parler-tts",
+            token=hf_token.strip()
+        )
+        description_tokenizer = AutoTokenizer.from_pretrained(
+            model.config.text_encoder._name_or_path
+        )
+        
+        print("=" * 50)
+        print(f"✅ Model loaded successfully on {device}!")
+        print("   You can now launch the UI")
+        print("=" * 50)
+        return True
+    except Exception as e:
+        print(f"❌ Error loading model: {e}")
+        return False
+
+def is_model_loaded():
+    """Check if model is loaded."""
+    return model is not None
 
 # ==========================================
 # Description Generator
@@ -116,7 +158,6 @@ def generate_description(
     
     # Build description
     if speaker and speaker != "-- Random Voice --":
-        # Extract speaker name (remove language suffix)
         speaker_name = speaker.split(" (")[0]
         desc = f"{speaker_name}'s voice is {expr_desc} with a {pitch_desc} tone"
     else:
@@ -131,8 +172,6 @@ def generate_description(
         desc += f" with a {emotion} tone"
     
     desc += "."
-    
-    # Audio quality
     desc += f" The recording is of {quality}"
     desc += f", with {noise} audio"
     desc += f" and a {reverb} environment."
@@ -161,12 +200,11 @@ def generate_speech(
     global model, tokenizer, description_tokenizer, device
     
     if model is None:
-        return None, "❌ Model not loaded! Click 'Load Model' first."
+        return None, "❌ Model not loaded! Run the setup cell first."
     
     if not text.strip():
         return None, "❌ Please enter some text to speak."
     
-    # Generate description
     description = generate_description(
         speaker, gender, accent, emotion,
         pitch, speed, expressivity,
@@ -174,11 +212,9 @@ def generate_speech(
     )
     
     try:
-        # Tokenize
         desc_inputs = description_tokenizer(description, return_tensors="pt").to(device)
         text_inputs = tokenizer(text, return_tensors="pt").to(device)
         
-        # Generate
         with torch.no_grad():
             generation = model.generate(
                 input_ids=desc_inputs.input_ids,
@@ -194,10 +230,6 @@ def generate_speech(
     
     except Exception as e:
         return None, f"❌ Error: {str(e)}"
-
-# ==========================================
-# Preview Description
-# ==========================================
 
 def preview_description(
     speaker: str,
@@ -219,11 +251,14 @@ def preview_description(
     )
 
 # ==========================================
-# Gradio Interface
+# Gradio Interface (No Load Button)
 # ==========================================
 
 def create_interface():
     """Create the Gradio interface."""
+    
+    # Check if model is loaded
+    model_status = "✅ Model loaded and ready!" if is_model_loaded() else "⚠️ Model not loaded - run setup cell first"
     
     with gr.Blocks(
         title="Indic Parler TTS",
@@ -234,10 +269,6 @@ def create_interface():
         css="""
         .gradio-container { max-width: 1200px !important; }
         .main-title { text-align: center; margin-bottom: 1rem; }
-        .desc-preview { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 1rem; border-radius: 10px; color: white;
-        }
         """
     ) as app:
         
@@ -249,16 +280,8 @@ def create_interface():
             elem_classes="main-title"
         )
         
-        with gr.Row():
-            load_btn = gr.Button("🚀 Load Model", variant="primary", scale=1)
-            load_status = gr.Textbox(
-                label="Status", 
-                value="⏳ Click 'Load Model' to start",
-                interactive=False,
-                scale=2
-            )
-        
-        load_btn.click(fn=load_model, outputs=load_status)
+        # Status bar (no load button)
+        gr.Markdown(f"**Status:** {model_status}")
         
         gr.Markdown("---")
         
@@ -383,7 +406,7 @@ def create_interface():
         
         preview_btn.click(
             fn=preview_description,
-            inputs=all_inputs[1:],  # Exclude text_input
+            inputs=all_inputs[1:],
             outputs=description_preview
         )
         
@@ -405,19 +428,28 @@ def create_interface():
     
     return app
 
+def launch_app():
+    """Launch the Gradio app."""
+    app = create_interface()
+    app.launch(share=True, debug=True, show_error=True)
+
 # ==========================================
 # Main
 # ==========================================
 
 if __name__ == "__main__":
-    print("🎤 Starting Indic Parler TTS UI...")
+    print("🎤 Indic Parler TTS UI")
     print("=" * 50)
     
-    app = create_interface()
+    if not is_model_loaded():
+        print("⚠️  Model not pre-loaded!")
+        print("   In Colab, run the setup cell first:")
+        print("")
+        print("   from app import setup_model")
+        print("   setup_model('hf_your_token')")
+        print("")
+        print("   Then run this cell again.")
+        print("=" * 50)
     
-    # Launch with share=True for Colab
-    app.launch(
-        share=True,  # Creates public URL for Colab
-        debug=True,
-        show_error=True
-    )
+    app = create_interface()
+    app.launch(share=True, debug=True, show_error=True)
