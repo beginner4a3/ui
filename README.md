@@ -23,8 +23,8 @@ High-quality Text-to-Speech with **69 speakers**, **21 languages**, and **12 emo
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/indic-parler-tts-ui.git
-cd indic-parler-tts-ui
+git clone https://github.com/beginner4a3/ui.git
+cd ui
 
 # Install dependencies
 pip install -r requirements.txt
@@ -36,13 +36,12 @@ python app.py
 ## 📁 Project Structure
 
 ```
-indic-parler-tts-ui/
+ui/
 ├── app.py                    # Gradio frontend
 ├── demo.ipynb               # Colab notebook
 ├── requirements.txt         # Dependencies
 ├── README.md               # This file
 ├── AUDIO_QUALITY_GUIDE.md  # Quality settings reference
-├── indic_parler_diagram.png # Architecture diagram
 └── frontend/               # HTML version (local only)
 ```
 
@@ -71,4 +70,4 @@ Based on [ai4bharat/indic-parler-tts](https://huggingface.co/ai4bharat/indic-par
 
 ---
 
-**Note**: Replace `YOUR_USERNAME` with your GitHub username in the Colab badge URL.
+**Note**: Replace `beginner4a3` with your GitHub username in the Colab badge URL.
