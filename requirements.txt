@@ -1,0 +1,17 @@
+# Indic Parler TTS - Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core
+torch>=2.0.0
+transformers>=4.35.0
+accelerate>=0.24.0
+
+# Parler TTS
+parler-tts @ git+https://github.com/huggingface/parler-tts.git
+
+# Audio
+soundfile>=0.12.0
+scipy>=1.10.0
+
+# UI
+gradio>=4.0.0

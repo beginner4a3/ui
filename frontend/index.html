@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indic Parler TTS - Audio Quality Control</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🎤</span>
+                <h1>Indic Parler TTS</h1>
+            </div>
+            <p class="subtitle">Audio Quality Control Studio</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel: Settings -->
+            <section class="settings-panel">
+                <h2>🎛️ Audio Settings</h2>
+
+                <!-- Text Input -->
+                <div class="control-group">
+                    <label for="textInput">Text to Speak</label>
+                    <textarea id="textInput" placeholder="Enter the text you want to convert to speech...">Hello, welcome to Indic Parler TTS. This is a demonstration of high-quality text to speech synthesis.</textarea>
+                </div>
+
+                <!-- Speaker Selection -->
+                <div class="control-group">
+                    <label for="speaker">Speaker</label>
+                    <select id="speaker">
+                        <option value="">-- Random Voice --</option>
+                        <optgroup label="Hindi">
+                            <option value="Divya">Divya (Female)</option>
+                            <option value="Rohit">Rohit (Male)</option>
+                            <option value="Maya">Maya (Female)</option>
+                            <option value="Karan">Karan (Male)</option>
+                            <option value="Sita">Sita (Female)</option>
+                            <option value="Bikram">Bikram (Male)</option>
+                        </optgroup>
+                        <optgroup label="Tamil">
+                            <option value="Aditi">Aditi (Female)</option>
+                            <option value="Sunita">Sunita (Female)</option>
+                            <option value="Tapan">Tapan (Male)</option>
+                        </optgroup>
+                        <optgroup label="Telugu">
+                            <option value="Anjali">Anjali (Female)</option>
+                            <option value="Amrita">Amrita (Female)</option>
+                        </optgroup>
+                        <optgroup label="Bengali">
+                            <option value="Leela">Leela (Female)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Gender (for random voice) -->
+                <div class="control-group" id="genderGroup">
+                    <label>Gender</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="gender" value="female" checked>
+                            <span>Female</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="gender" value="male">
+                            <span>Male</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Accent -->
+                <div class="control-group" id="accentGroup">
+                    <label for="accent">Accent</label>
+                    <select id="accent">
+                        <option value="">None (Default)</option>
+                        <option value="Indian" selected>Indian</option>
+                        <option value="British">British</option>
+                        <option value="American">American</option>
+                    </select>
+                </div>
+
+                <!-- Emotion -->
+                <div class="control-group">
+                    <label for="emotion">Emotion</label>
+                    <select id="emotion">
+                        <option value="">None</option>
+                        <option value="Neutral">Neutral</option>
+                        <option value="Happy">Happy</option>
+                        <option value="Sad">Sad</option>
+                        <option value="Anger">Anger</option>
+                        <option value="Fear">Fear</option>
+                        <option value="Surprise">Surprise</option>
+                        <option value="Disgust">Disgust</option>
+                        <option value="Narration">Narration</option>
+                        <option value="News">News</option>
+                        <option value="Conversation">Conversation</option>
+                        <option value="Command">Command</option>
+                    </select>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Pitch -->
+                <div class="control-group slider-group">
+                    <label>Pitch</label>
+                    <div class="slider-container">
+                        <span class="slider-label-left">Low</span>
+                        <input type="range" id="pitch" min="1" max="5" value="3" class="slider">
+                        <span class="slider-label-right">High</span>
+                    </div>
+                    <span class="slider-value" id="pitchValue">Moderate</span>
+                </div>
+
+                <!-- Speaking Rate -->
+                <div class="control-group slider-group">
+                    <label>Speaking Rate</label>
+                    <div class="slider-container">
+                        <span class="slider-label-left">Slow</span>
+                        <input type="range" id="speed" min="1" max="5" value="3" class="slider">
+                        <span class="slider-label-right">Fast</span>
+                    </div>
+                    <span class="slider-value" id="speedValue">Moderate</span>
+                </div>
+
+                <!-- Expressivity -->
+                <div class="control-group slider-group">
+                    <label>Expressivity</label>
+                    <div class="slider-container">
+                        <span class="slider-label-left">Monotone</span>
+                        <input type="range" id="expressivity" min="1" max="3" value="2" class="slider">
+                        <span class="slider-label-right">Expressive</span>
+                    </div>
+                    <span class="slider-value" id="expressivityValue">Slightly Expressive</span>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Audio Quality -->
+                <div class="control-group">
+                    <label>Audio Quality</label>
+                    <div class="radio-group vertical">
+                        <label class="radio-label">
+                            <input type="radio" name="quality" value="very high quality" checked>
+                            <span>🌟 Very High Quality</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="quality" value="high quality">
+                            <span>✨ High Quality</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="quality" value="good quality">
+                            <span>👍 Good Quality</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Noise Level -->
+                <div class="control-group">
+                    <label>Background Noise</label>
+                    <div class="radio-group vertical">
+                        <label class="radio-label">
+                            <input type="radio" name="noise" value="very clear" checked>
+                            <span>🔇 Very Clear</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="noise" value="slightly noisy">
+                            <span>🔈 Slightly Noisy</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="noise" value="noisy">
+                            <span>🔊 Noisy</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Reverb -->
+                <div class="control-group">
+                    <label>Reverberation</label>
+                    <div class="radio-group vertical">
+                        <label class="radio-label">
+                            <input type="radio" name="reverb" value="close-sounding" checked>
+                            <span>🎙️ Close-Sounding</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="reverb" value="slightly distant">
+                            <span>📢 Slightly Distant</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="reverb" value="distant-sounding">
+                            <span>🏛️ Distant-Sounding</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Output -->
+            <section class="output-panel">
+                <h2>📝 Generated Description</h2>
+                
+                <div class="description-preview">
+                    <p id="descriptionOutput">Your generated description will appear here...</p>
+                </div>
+
+                <h2>🐍 Python Code</h2>
+                
+                <div class="code-container">
+                    <button class="copy-btn" onclick="copyCode()">
+                        <span class="copy-icon">📋</span>
+                        <span class="copy-text">Copy Code</span>
+                    </button>
+                    <pre><code id="codeOutput">Loading...</code></pre>
+                </div>
+
+                <div class="tips-section">
+                    <h3>💡 Pro Tips</h3>
+                    <ul>
+                        <li>Use <strong>named speakers</strong> for consistent voice</li>
+                        <li>Add <strong>punctuation</strong> for natural pauses</li>
+                        <li>Include <strong>"very clear audio"</strong> for best quality</li>
+                        <li>Enable <strong>torch.compile</strong> for 4.5x speed</li>
+                    </ul>
+                </div>
+
+                <div class="speaker-grid">
+                    <h3>👥 All Available Speakers (69)</h3>
+                    <div class="speaker-list">
+                        <span class="speaker-tag">Divya</span>
+                        <span class="speaker-tag">Rohit</span>
+                        <span class="speaker-tag">Maya</span>
+                        <span class="speaker-tag">Karan</span>
+                        <span class="speaker-tag">Sita</span>
+                        <span class="speaker-tag">Bikram</span>
+                        <span class="speaker-tag">Aditi</span>
+                        <span class="speaker-tag">Sunita</span>
+                        <span class="speaker-tag">Tapan</span>
+                        <span class="speaker-tag">Anjali</span>
+                        <span class="speaker-tag">Amrita</span>
+                        <span class="speaker-tag">Leela</span>
+                        <span class="speaker-tag more">+57 more</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built for <a href="https://huggingface.co/ai4bharat/indic-parler-tts" target="_blank">ai4bharat/indic-parler-tts</a> • 21 Languages • 69 Speakers • 12 Emotions</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
