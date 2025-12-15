@@ -109,7 +109,7 @@ def setup_model(hf_token: str):
         model = ParlerTTSForConditionalGeneration.from_pretrained(
             "ai4bharat/indic-parler-tts",
             torch_dtype=torch_dtype,
-            attn_implementation="sdpa",
+            attn_implementation="eager",  # T5Encoder doesn't support sdpa
             token=hf_token.strip()
         ).to(device)
         
