@@ -2,7 +2,7 @@
 
 High-quality Text-to-Speech with **69 speakers**, **21 languages**, and **12 emotions**.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/indic-parler-tts-ui/blob/main/demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/beginner4a3/ui/blob/main/demo.ipynb)
 
 ## ✨ Features
 
