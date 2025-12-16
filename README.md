@@ -12,6 +12,12 @@ High-quality Text-to-Speech with **69 speakers**, **21 languages**, and **12 emo
 - 🚀 **GPU Optimized**: SDPA attention + bfloat16
 - 🌐 **Gradio UI**: Works in Colab with public URL
 
+## 🧠 How It Works
+
+![Parler TTS Architecture](parler_tts_architecture.png)
+
+The model uses a **T5 Text Encoder** to understand natural language descriptions (style, pitch, speed) and combines them with the spoken text using a **Cross-Attention Transformer**.
+
 ## 🚀 Quick Start (Google Colab)
 
 1. Click the **Open in Colab** badge above

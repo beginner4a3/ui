@@ -11,6 +11,7 @@ import torch
 import gradio as gr
 import numpy as np
 import os
+import re
 
 # ==========================================
 # Configuration - Official Speaker List
@@ -302,21 +303,48 @@ def generate_speech(
     )
     
     try:
+        # Split text into chunks (sentences) to avoid 30s generation limit
+        # Split by ., !, ? but keep the punctuation
+        chunks = re.split(r'(?<=[.!?।])\s+', text)
+        chunks = [c.strip() for c in chunks if c.strip()]
+        
+        if not chunks:
+            chunks = [text]
+            
+        print(f"Generating audio for {len(chunks)} chunks...")
+        
+        all_audio_arrays = []
+        sample_rate = None
+        
         desc_inputs = description_tokenizer(description, return_tensors="pt").to(device)
-        text_inputs = tokenizer(text, return_tensors="pt").to(device)
         
-        with torch.no_grad():
-            generation = model.generate(
-                input_ids=desc_inputs.input_ids,
-                attention_mask=desc_inputs.attention_mask,
-                prompt_input_ids=text_inputs.input_ids,
-                prompt_attention_mask=text_inputs.attention_mask
-            )
+        for i, chunk in enumerate(chunks):
+            print(f"Processing chunk {i+1}/{len(chunks)}: {chunk[:30]}...")
+            text_inputs = tokenizer(chunk, return_tensors="pt").to(device)
+            
+            with torch.no_grad():
+                generation = model.generate(
+                    input_ids=desc_inputs.input_ids,
+                    attention_mask=desc_inputs.attention_mask,
+                    prompt_input_ids=text_inputs.input_ids,
+                    prompt_attention_mask=text_inputs.attention_mask,
+                    max_new_tokens=1024  # Ensure enough tokens for the chunk
+                )
+            
+            audio_arr = generation.cpu().numpy().squeeze()
+            all_audio_arrays.append(audio_arr)
+            
+            # Get sample rate from the first chunk
+            if sample_rate is None:
+                sample_rate = model.config.sampling_rate
         
-        audio_arr = generation.cpu().numpy().squeeze()
-        sample_rate = model.config.sampling_rate
-        
-        return (sample_rate, audio_arr), f"✅ Generated!\n\n📝 Description:\n{description}"
+        # Concatenate all audio chunks
+        if len(all_audio_arrays) > 1:
+            final_audio = np.concatenate(all_audio_arrays)
+        else:
+            final_audio = all_audio_arrays[0]
+            
+        return (sample_rate, final_audio), f"✅ Generated {len(chunks)} chunks!\n\n📝 Description:\n{description}"
     
     except Exception as e:
         return None, f"❌ Error: {str(e)}"
